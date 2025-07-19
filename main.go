@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	"defer-tg-bot/bot"
-	"defer-tg-bot/db"
+	"github.com/muuulya/defer-tg-bot/bot"
+	"github.com/muuulya/defer-tg-bot/db"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/joho/godotenv"

@@ -39,13 +39,21 @@ func (b *Bot) SaveChannelLink(userID int64, link string) {
 		return
 	}
 
-	chat, err := b.API.GetChat(tgbotapi.ChatConfig{SuperGroupUsername: link})
+	chat, err := b.API.GetChat(tgbotapi.ChatInfoConfig{
+		ChatConfig: tgbotapi.ChatConfig{
+			SuperGroupUsername: link,
+		},
+	})
 	if err != nil {
 		b.API.Send(tgbotapi.NewMessage(userID, "Не удалось получить чат, проверьте ссылку"))
 		return
 	}
-
-	member, err := b.API.GetChatMember(tgbotapi.ChatConfigWithUser{ChatID: chat.ID, UserID: b.API.Self.ID})
+	member, err := b.API.GetChatMember(tgbotapi.GetChatMemberConfig{
+		ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
+			ChatID: chat.ID,
+			UserID: b.API.Self.ID,
+		},
+	})
 	if err != nil || member.Status != "administrator" {
 		b.API.Send(tgbotapi.NewMessage(userID, "Добавьте бота в канал с правами администратора"))
 		return
@@ -108,11 +116,8 @@ func (b *Bot) FinalizeMessages(userID int64) {
 
 func (b *Bot) PublishMessages(postID int, channelID, userID int64, msgIDs []int) {
 	for _, msgID := range msgIDs {
-		_, err := b.API.CopyMessage(tgbotapi.CopyMessageConfig{
-			ChatID:     channelID,
-			FromChatID: userID,
-			MessageID:  msgID,
-		})
+		copyMsg := tgbotapi.NewCopyMessage(channelID, userID, msgID)
+		_, err := b.API.Send(copyMsg)
 		if err != nil {
 			b.API.Send(tgbotapi.NewMessage(userID, fmt.Sprintf("Ошибка при публикации сообщения %d", msgID)))
 		}
