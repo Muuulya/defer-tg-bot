@@ -1,0 +1,17 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+        "name": "Debug Defer-TG-Bot",      // любое понятное вам имя
+        "type": "go",                     // используем Go-расширение
+        "request": "launch",              // режим запуска
+        "mode": "debug",                  // строго отладка через Delve
+        "program": "${workspaceFolder}",  // путь к главному пакету (root)
+        "envFile": "${workspaceFolder}/.env", // подгрузить переменные из .env
+        "args": []                        // аргументы командной строки (пусто)
+        }
+    ]
+}
