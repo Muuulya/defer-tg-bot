@@ -2,6 +2,7 @@ package sheduler
 
 import (
 	"context"
+	"errors"
 	"log"
 	"sync"
 	"time"
@@ -59,12 +60,20 @@ func (s *Sheduler) scheduleMessages(ctx context.Context, users []data.User) {
 		channels, err := s.storage.GetAllUserChannels(user.ID())
 		if err != nil {
 			log.Println(err)
+			continue
 		}
 
 		for _, channel := range channels {
 			pack, err := s.storage.GetMessagePackForUserChannelAfter(user.ID(), channel.ID(), s.now())
 			if err != nil {
+				if errors.Is(err, storage.ErrorMessageNotFound) {
+					continue
+				}
 				log.Println(err)
+				continue
+			}
+			if pack == nil {
+				continue
 			}
 
 			pair := data.NewUserChannelPair(user.ID(), channel.ID())
@@ -81,15 +90,22 @@ func (s *Sheduler) scheduleMessagePackForUserChannel(ctx context.Context, pack d
 	for {
 		select {
 		case <-ctx.Done():
+			if !timer.Stop() {
+				<-timer.C
+			}
+			s.mutex.Lock()
+			s.shedulChannelPacks[pair] = nil
+			s.mutex.Unlock()
 			log.Println("Cancel shedule message pack") // todo решить что нужно или не нужно тут делать.
 			return
 		case <-timer.C:
 			s.mutex.Lock()
-			defer s.mutex.Unlock()
 			s.shedulChannelPacks[pair] = nil
+			s.mutex.Unlock()
 			if err := s.sendMessagePack(pack); err != nil {
 				log.Println(err)
 			}
+			return
 		}
 	}
 }

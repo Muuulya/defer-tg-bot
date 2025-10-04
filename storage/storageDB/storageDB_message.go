@@ -162,10 +162,14 @@ func (s *StorageDB) GetMissedMessagesPacksBefor(befor time.Time) (packs []data.D
 	defer rows.Close()
 
 	packs, err = s.readDefferedMessages(rows)
-	if err != storage.ErrorMessageNotFound {
-		err = storage.ErrorGetMessages
+	if err != nil {
+		if err == storage.ErrorMessageNotFound {
+			return nil, err
+		}
+		return nil, storage.ErrorGetMessages
 	}
-	return packs, err
+
+	return packs, nil
 }
 
 func (s *StorageDB) UpdateMessageStatus(message *data.DefferedMessage) error {
