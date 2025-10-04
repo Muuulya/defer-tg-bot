@@ -151,7 +151,7 @@ func (s *ShowMyChannelsState) getChannelsButtons(user *data.User, channels []dat
 	for i, ch := range (channels)[start:end] {
 		stringID := strconv.FormatInt(ch.ID(), 10)
 		row := tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%d. %s", start+i+1, ch.Name), stringID),
+			tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%d. %s", start+i+1, ch.Name()), stringID),
 		)
 		rows = append(rows, row)
 	}
@@ -160,7 +160,7 @@ func (s *ShowMyChannelsState) getChannelsButtons(user *data.User, channels []dat
 	if page > 0 {
 		nav = append(nav, s.getInlineButton(buttons.Previous))
 	}
-	if page < channelsOnPage-1 {
+	if page < channelsOnPage {
 		nav = append(nav, s.getInlineButton(buttons.Next))
 	}
 	if len(nav) > 0 {
