@@ -80,7 +80,7 @@ func (s *RemoveChannelState) showStateMessage(user *data.User, extraMessageText 
 			[]buttons.Button{buttons.Cancel},
 		)
 	} else {
-		text += fmt.Sprintf(messages.RemoveChannel, channel.Name)
+		text += fmt.Sprintf(messages.RemoveChannel, channel.Name())
 		keyboard = s.getInlineKeyboard(
 			[]buttons.Button{buttons.RemoveChannel},
 			[]buttons.Button{buttons.Cancel},
