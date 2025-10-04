@@ -56,7 +56,7 @@ func (sm *StateMashine) SetStartState(user *data.User) error {
 		return fmt.Errorf("unknown next state: %s", startStateName)
 	}
 
-	user.CurrentStateName = startStateName
+	user.SetCurrentState(startStateName)
 	sm.storage.UpdateUserState(user)
 
 	err := newState.Enter(user)
@@ -70,7 +70,7 @@ func (sm *StateMashine) SetStartState(user *data.User) error {
 
 func (sm *StateMashine) SwitchState(user *data.User, nextStateName string) error {
 
-	if user.CurrentStateName == "" {
+	if user.CurrentStateName() == "" {
 		return errors.New("current state name empty")
 	}
 
@@ -78,7 +78,7 @@ func (sm *StateMashine) SwitchState(user *data.User, nextStateName string) error
 		return errors.New("next state name empty")
 	}
 
-	currentState, ok := sm.states[user.CurrentStateName]
+	currentState, ok := sm.states[user.CurrentStateName()]
 	if !ok {
 		return fmt.Errorf("unknown current state: %s", user.CurrentStateName)
 	}
@@ -94,7 +94,7 @@ func (sm *StateMashine) SwitchState(user *data.User, nextStateName string) error
 		return errors.New("coldn't change the state")
 	}
 
-	user.CurrentStateName = nextStateName
+	user.SetCurrentState(nextStateName)
 	sm.storage.UpdateUserState(user)
 
 	err = newState.Enter(user)
@@ -107,11 +107,11 @@ func (sm *StateMashine) SwitchState(user *data.User, nextStateName string) error
 }
 
 func (sm *StateMashine) Handle(user *data.User, update *tgbotapi.Update) error {
-	if user.CurrentStateName == "" {
+	if user.CurrentStateName() == "" {
 		return errors.New("current state name empty")
 	}
 
-	currentState, ok := sm.states[user.CurrentStateName]
+	currentState, ok := sm.states[user.CurrentStateName()]
 	if !ok {
 		return fmt.Errorf("unknown state: %s", user.CurrentStateName)
 	}

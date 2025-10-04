@@ -24,11 +24,11 @@ func NewStartState(
 func (s *StartState) Name() string { return startStateName }
 
 func (s *StartState) Enter(user *data.User) error {
-	_, err := s.manager.SendMessage(user.ID, messages.Hello)
+	_, err := s.manager.SendMessage(user.ID(), messages.Hello)
 	if err != nil {
 		return err
 	}
-	_, err = s.manager.SendMessage(user.ID, messages.Info)
+	_, err = s.manager.SendMessage(user.ID(), messages.Info)
 	if err != nil {
 		return err
 	}

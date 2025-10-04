@@ -14,17 +14,21 @@ type Storage interface {
 	UpdateUserCurrentDialogMessage(user *data.User) error
 	UpdateUserSelectedChannelID(user *data.User) error
 	UpdateUserCurrentChannelPage(user *data.User) error
-	TryGetUser(userID int64) (user *data.User, found bool, error error)
+	GetUser(userID int64) (user *data.User, err error)
+	GetAllUsers() (users []data.User, err error)
 
 	AddChannel(userID int64, channel *data.Channel) error
 	UpdateChannelName(userID int64, channel *data.Channel) error
-	TryGetChannel(userID int64, channelID int64) (channel *data.Channel, found bool, error error)
-	GetAllChannels(userID int64) ([]data.Channel, error)
+	GetChannel(userID int64, channelID int64) (channel *data.Channel, err error)
+	GetAllUserChannels(userID int64) (channels []data.Channel, err error)
 	RemoveChannel(userID int64, channelID int64) error
 
-	AddDefferedMessage(defferedMessage *data.DefferedMessage) error
-	AddDefferedMessages(defferedMessage []data.DefferedMessage) error
-	GetAllDefferedMessages() (defferedMessages []data.DefferedMessage, error error)
-	GetNextDefferedMessages(time *time.Time) (defferedMessages []data.DefferedMessage, error error)
-	RemoveDefferedMessages(defferedMessages []data.DefferedMessage) error
+	AddMessage(message *data.DefferedMessage) error
+	AddMessagePack(pack *data.DefferedMessagePack) error
+	GetMessagePackForUserChannelAfter(userID int64, channelID int64, after time.Time) (pack *data.DefferedMessagePack, err error)
+	GetMissedMessagesPacksBefor(befor time.Time) (packs []data.DefferedMessagePack, err error)
+	UpdateMessageStatus(message *data.DefferedMessage) error
+	UpdateMessagePackStatus(pack *data.DefferedMessagePack) error
+	RemoveMessage(message *data.DefferedMessage) error
+	RemoveMessagePack(pack *data.DefferedMessagePack) error
 }

@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/muuulya/defer-tg-bot/bot"
 	"github.com/muuulya/defer-tg-bot/bot/data"
@@ -13,11 +16,13 @@ import (
 
 func main() {
 	env := getENV()
-
 	bot := bot.NewBot(env)
-	defer bot.Stop()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
-	bot.Start()
+	bot.Start(ctx)
+	<-ctx.Done()
+	bot.Stop()
 }
 
 func getENV() *data.ENV {

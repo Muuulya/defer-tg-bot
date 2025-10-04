@@ -33,7 +33,7 @@ func (s *RemoveChannelState) Enter(user *data.User) error {
 func (s RemoveChannelState) Handle(user *data.User, update *tgbotapi.Update) (nextState string, err error) {
 	if update.Message != nil {
 		message := update.Message
-		defer s.manager.RemoveMessage(user.ID, message.MessageID)
+		defer s.manager.RemoveMessage(user.ID(), message.MessageID)
 
 		if s.isStartCommand(message) {
 			return s.handleStartCommand(user, message)
@@ -50,7 +50,7 @@ func (s RemoveChannelState) Handle(user *data.User, update *tgbotapi.Update) (ne
 			return showMyChannelsStateName, nil
 		}
 		if s.isButtonPressed(callbackQuery, buttons.RemoveChannel) {
-			if err = s.storage.RemoveChannel(user.ID, user.SelectedChannelID); err != nil {
+			if err = s.storage.RemoveChannel(user.ID(), user.SelectedChannelID()); err != nil {
 				log.Println(err)
 				s.manager.SendCallbackMessage(callbackQuery, "Что-то пошло не так. Не удалось удалить канал")
 			} else {
@@ -64,7 +64,7 @@ func (s RemoveChannelState) Handle(user *data.User, update *tgbotapi.Update) (ne
 }
 
 func (s *RemoveChannelState) Exit(user *data.User) error {
-	user.SelectedChannelID = 0
+	user.SetSelectedChannel(0)
 	s.storage.UpdateUserSelectedChannelID(user)
 	return nil
 }
@@ -73,16 +73,16 @@ func (s *RemoveChannelState) showStateMessage(user *data.User, extraMessageText 
 	text := extraMessageText
 	var keyboard tgbotapi.InlineKeyboardMarkup
 
-	channel, found, err := s.storage.TryGetChannel(user.ID, user.SelectedChannelID)
-	if err == nil && found {
-		text += fmt.Sprintf(messages.RemoveChannel, channel.Name)
+	channel, err := s.storage.GetChannel(user.ID(), user.SelectedChannelID())
+	if err != nil {
+		text += messages.ChannelNotFound
 		keyboard = s.getInlineKeyboard(
-			[]buttons.Button{buttons.RemoveChannel},
 			[]buttons.Button{buttons.Cancel},
 		)
 	} else {
-		text += messages.ChannelNotFound
+		text += fmt.Sprintf(messages.RemoveChannel, channel.Name)
 		keyboard = s.getInlineKeyboard(
+			[]buttons.Button{buttons.RemoveChannel},
 			[]buttons.Button{buttons.Cancel},
 		)
 	}

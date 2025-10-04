@@ -39,24 +39,24 @@ func (s *AbstractState) isStartCommand(message *tgbotapi.Message) bool {
 }
 
 func (s *AbstractState) editOrCreateNewMessage(user *data.User, text string) {
-	_, err := s.manager.EditMessage(user.ID, user.CurrentDialogMessageID, text)
+	_, err := s.manager.EditMessage(user.ID(), user.CurrentDialogMessageID(), text)
 	if err != nil {
-		newm, err := s.manager.SendMessage(user.ID, text)
+		newm, err := s.manager.SendMessage(user.ID(), text)
 		if err == nil {
-			s.manager.RemoveMessage(user.ID, user.CurrentDialogMessageID)
-			user.CurrentDialogMessageID = newm.MessageID
+			s.manager.RemoveMessage(user.ID(), user.CurrentDialogMessageID())
+			user.SetDialogMessageID(newm.MessageID)
 			s.storage.UpdateUserCurrentDialogMessage(user)
 		}
 	}
 }
 
 func (s *AbstractState) editOrCreateNewMessageWithButtons(user *data.User, text string, keyboard tgbotapi.InlineKeyboardMarkup) {
-	_, err := s.manager.EditMessageWithInlineButtons(user.ID, user.CurrentDialogMessageID, text, keyboard)
+	_, err := s.manager.EditMessageWithInlineButtons(user.ID(), user.CurrentDialogMessageID(), text, keyboard)
 	if err != nil {
-		newm, err := s.manager.SendMessageWithInlineButtons(user.ID, text, keyboard)
+		newm, err := s.manager.SendMessageWithInlineButtons(user.ID(), text, keyboard)
 		if err == nil {
-			s.manager.RemoveMessage(user.ID, user.CurrentDialogMessageID)
-			user.CurrentDialogMessageID = newm.MessageID
+			s.manager.RemoveMessage(user.ID(), user.CurrentDialogMessageID())
+			user.SetDialogMessageID(newm.MessageID)
 			s.storage.UpdateUserCurrentDialogMessage(user)
 		}
 	}

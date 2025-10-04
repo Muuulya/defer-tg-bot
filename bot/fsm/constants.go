@@ -1,7 +1,7 @@
 package fsm
 
 const (
-	startStateName          = "StartStete"
+	startStateName          = "StartState"
 	baseStateName           = "BaseState"
 	showMyChannelsStateName = "ShowMyChannelsState"
 	showChannelStateName    = "ShowChannelState"

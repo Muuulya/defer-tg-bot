@@ -35,7 +35,7 @@ func (s *ShowMyChannelsState) Enter(user *data.User) error {
 func (s *ShowMyChannelsState) Handle(user *data.User, update *tgbotapi.Update) (nextState string, err error) {
 	if update.Message != nil {
 		message := update.Message
-		defer s.manager.RemoveMessage(user.ID, message.MessageID)
+		defer s.manager.RemoveMessage(user.ID(), message.MessageID)
 
 		if s.isStartCommand(message) {
 			return s.handleStartCommand(user, message)
@@ -56,25 +56,25 @@ func (s *ShowMyChannelsState) Handle(user *data.User, update *tgbotapi.Update) (
 			return addChannelStateName, nil
 		}
 		if s.isButtonPressed(callbackQuery, buttons.Previous) {
-			user.CurrentChannelPage -= 1
+			user.SetChannelPage(user.CurrentChannelPage() - 1)
 			s.storage.UpdateUserCurrentChannelPage(user)
 			s.manager.SendCallbackMessage(callbackQuery, "Предыдущая страница")
 			s.showStateMessage(user, "")
 			return "", nil
 		}
 		if s.isButtonPressed(callbackQuery, buttons.Next) {
-			user.CurrentChannelPage += 1
+			user.SetChannelPage(user.CurrentChannelPage() + 1)
 			s.storage.UpdateUserCurrentChannelPage(user)
 			s.manager.SendCallbackMessage(callbackQuery, "Следующая страница")
 			s.showStateMessage(user, "")
 			return "", nil
 		}
 
-		channels, err := s.storage.GetAllChannels(user.ID)
+		channels, err := s.storage.GetAllUserChannels(user.ID())
 
 		if err == nil {
 			if isPressed, channelID := s.isChannelButtonPresed(callbackQuery, &channels); isPressed {
-				user.SelectedChannelID = channelID
+				user.SetSelectedChannel(channelID)
 				err = s.storage.UpdateUserSelectedChannelID(user)
 				if err == nil {
 					s.manager.SendCallbackMessage(callbackQuery, "Переходим к каналу")
@@ -96,7 +96,7 @@ func (s *ShowMyChannelsState) Handle(user *data.User, update *tgbotapi.Update) (
 }
 
 func (s *ShowMyChannelsState) Exit(user *data.User) error {
-	user.CurrentChannelPage = 0
+	user.SetChannelPage(0)
 	err := s.storage.UpdateUserCurrentChannelPage(user)
 	return err
 }
@@ -105,20 +105,20 @@ func (s *ShowMyChannelsState) showStateMessage(user *data.User, extraMessageText
 	text := extraMessageText
 	var keyboard tgbotapi.InlineKeyboardMarkup
 
-	channels, err := s.storage.GetAllChannels(user.ID)
+	channels, err := s.storage.GetAllUserChannels(user.ID())
 	if err == nil {
 		if len(channels) == 0 {
 			text += messages.NoChannels
 		} else {
 			channelsCount := len(channels)
 			pages := (channelsCount + channelsOnPage - 1) / channelsOnPage
-			if user.CurrentChannelPage < 0 || user.CurrentChannelPage >= pages {
-				user.CurrentChannelPage = 0
+			if user.CurrentChannelPage() < 0 || user.CurrentChannelPage() >= pages {
+				user.SetChannelPage(0)
 				s.storage.UpdateUserCurrentChannelPage(user)
 			}
 			text += fmt.Sprintf(messages.AllYourChannel, channelsCount)
 			if pages > 1 {
-				text += fmt.Sprintf(messages.ChannelPage, user.CurrentChannelPage+1, pages)
+				text += fmt.Sprintf(messages.ChannelPage, user.CurrentChannelPage()+1, pages)
 			}
 			text += messages.SelectChannel
 			keyboard = s.getChannelsButtons(user, channels)
@@ -140,7 +140,7 @@ func (s *ShowMyChannelsState) showStateMessage(user *data.User, extraMessageText
 
 func (s *ShowMyChannelsState) getChannelsButtons(user *data.User, channels []data.Channel) tgbotapi.InlineKeyboardMarkup {
 	total := len(channels)
-	page := user.CurrentChannelPage
+	page := user.CurrentChannelPage()
 	start := page * channelsOnPage
 	end := start + channelsOnPage
 	if end > total {
@@ -149,7 +149,7 @@ func (s *ShowMyChannelsState) getChannelsButtons(user *data.User, channels []dat
 
 	rows := make([][]tgbotapi.InlineKeyboardButton, 0, channelsOnPage+1)
 	for i, ch := range (channels)[start:end] {
-		stringID := strconv.FormatInt(ch.ID, 10)
+		stringID := strconv.FormatInt(ch.ID(), 10)
 		row := tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%d. %s", start+i+1, ch.Name), stringID),
 		)
@@ -176,8 +176,8 @@ func (s *ShowMyChannelsState) isChannelButtonPresed(
 ) (isPresed bool, channelID int64) {
 	if id, err := strconv.ParseInt(callbackQuery.Data, 10, 64); err == nil {
 		for _, ch := range *channels {
-			if id == ch.ID {
-				return true, ch.ID
+			if id == ch.ID() {
+				return true, ch.ID()
 			}
 		}
 	}

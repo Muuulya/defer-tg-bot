@@ -39,20 +39,20 @@ func (s *AddChannelState) Enter(user *data.User) error {
 func (s *AddChannelState) Handle(user *data.User, update *tgbotapi.Update) (nextState string, err error) {
 	if update.Message != nil {
 		message := update.Message
-		defer s.manager.RemoveMessage(user.ID, message.MessageID)
+		defer s.manager.RemoveMessage(user.ID(), message.MessageID)
 
 		if s.isStartCommand(message) {
 			return s.handleStartCommand(user, message)
 		}
 
 		if channel, err := s.ResolveChannel(message); err == nil {
-			getChatMemberConfig := tgbotapi.NewGetChatMember(channel.ID, s.tgAPI.Self.ID)
+			getChatMemberConfig := tgbotapi.NewGetChatMember(channel.ID(), s.tgAPI.Self.ID)
 			if member, err := s.tgAPI.GetChatMember(getChatMemberConfig); err == nil {
 				if member.Status != "administrator" && member.Status != "creator" {
 					err = s.showStateMessage(user, messages.BotNotAdmin)
 					return "", err
 				}
-				if err = s.storage.AddChannel(user.ID, channel); err == nil {
+				if err = s.storage.AddChannel(user.ID(), channel); err == nil {
 					return showMyChannelsStateName, nil
 				} else {
 					log.Println(err)
@@ -86,7 +86,7 @@ func (s *AddChannelState) Exit(user *data.User) error {
 }
 
 func (s *AddChannelState) ResolveChannel(message *tgbotapi.Message) (channel *data.Channel, err error) {
-	channel = data.NewDummyChannel()
+	channel = &data.Channel{}
 
 	if message.ForwardOrigin != nil && message.ForwardOrigin.IsChannel() {
 		channel = data.NewChannel(message.ForwardOrigin.Chat.ID, message.ForwardOrigin.Chat.Title)

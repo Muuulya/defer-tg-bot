@@ -106,3 +106,9 @@ func (manager *MessageManager) EditMessageWithInlineButtons(
 func (manager *MessageManager) SendCallbackMessage(callbackQuery *tgbotapi.CallbackQuery, text string) {
 	manager.tgAPI.Request(tgbotapi.NewCallback(callbackQuery.ID, text))
 }
+
+func (manager *MessageManager) CopyMessage(fromChatID int64, messageID int, toChatID int64) (newMessageID int, err error) {
+	coppyMessageConfig := tgbotapi.NewCopyMessage(toChatID, fromChatID, messageID)
+	newMessage, err := manager.tgAPI.CopyMessage(coppyMessageConfig)
+	return newMessage.MessageID, err
+}

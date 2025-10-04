@@ -31,7 +31,7 @@ func (s *BaseState) Enter(user *data.User) error {
 func (s *BaseState) Handle(user *data.User, update *tgbotapi.Update) (nextState string, err error) {
 	if update.Message != nil {
 		message := update.Message
-		defer s.manager.RemoveMessage(user.ID, message.MessageID)
+		defer s.manager.RemoveMessage(user.ID(), message.MessageID)
 
 		if s.isStartCommand(message) {
 			return s.handleStartCommand(user, message)
@@ -56,8 +56,8 @@ func (s *BaseState) Handle(user *data.User, update *tgbotapi.Update) (nextState 
 			return "", nil
 		}
 		if s.isButtonPressed(callbackQuery, buttons.Info) {
-			s.manager.SendMessage(user.ID, messages.Info)
-			s.manager.RemoveMessage(user.ID, user.CurrentDialogMessageID)
+			s.manager.SendMessage(user.ID(), messages.Info)
+			s.manager.RemoveMessage(user.ID(), user.CurrentDialogMessageID())
 			s.showStateMessage(user, "")
 			s.manager.SendCallbackMessage(callbackQuery, "Как все устроено")
 			return "", nil

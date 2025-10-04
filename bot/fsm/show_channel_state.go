@@ -33,7 +33,7 @@ func (s *ShowChannelState) Enter(user *data.User) error {
 func (s *ShowChannelState) Handle(user *data.User, update *tgbotapi.Update) (nextState string, err error) {
 	if update.Message != nil {
 		message := update.Message
-		defer s.manager.RemoveMessage(user.ID, message.MessageID)
+		defer s.manager.RemoveMessage(user.ID(), message.MessageID)
 
 		if s.isStartCommand(message) {
 			return s.handleStartCommand(user, message)
@@ -76,17 +76,17 @@ func (s *ShowChannelState) showStateMessage(user *data.User, extraMessageText st
 	text := extraMessageText
 	var keyboard tgbotapi.InlineKeyboardMarkup
 
-	channel, found, err := s.storage.TryGetChannel(user.ID, user.SelectedChannelID)
-	if err == nil && found {
+	channel, err := s.storage.GetChannel(user.ID(), user.SelectedChannelID())
+	if err != nil {
+		text = messages.ChannelNotFound
+		keyboard = s.getInlineKeyboard(
+			[]buttons.Button{buttons.Return},
+		)
+	} else {
 		text += fmt.Sprintf(messages.RemoveChannel, channel.Name)
 		keyboard = s.getInlineKeyboard(
 			[]buttons.Button{buttons.UpdateChannel},
 			[]buttons.Button{buttons.RemoveChannel},
-			[]buttons.Button{buttons.Return},
-		)
-	} else {
-		text = messages.ChannelNotFound
-		keyboard = s.getInlineKeyboard(
 			[]buttons.Button{buttons.Return},
 		)
 	}
@@ -96,12 +96,12 @@ func (s *ShowChannelState) showStateMessage(user *data.User, extraMessageText st
 }
 
 func (s *ShowChannelState) updateChannelName(user *data.User) error {
-	chatInfoConfig := tgbotapi.ChatInfoConfig{ChatConfig: tgbotapi.ChatConfig{ChatID: user.SelectedChannelID}}
+	chatInfoConfig := tgbotapi.ChatInfoConfig{ChatConfig: tgbotapi.ChatConfig{ChatID: user.SelectedChannelID()}}
 	if chat, err := s.tgAPI.GetChat(chatInfoConfig); err != nil {
 		return err
 	} else {
 		channel := data.NewChannel(chat.ID, chat.Title)
-		if err = s.storage.UpdateChannelName(user.ID, channel); err != nil {
+		if err = s.storage.UpdateChannelName(user.ID(), channel); err != nil {
 			return err
 		}
 	}
